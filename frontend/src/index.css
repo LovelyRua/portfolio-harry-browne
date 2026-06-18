@@ -1,0 +1,1527 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --surface: #f5f7f8;
+  --panel: #ffffff;
+  --panel-soft: #f9fafb;
+  --ink: #17201c;
+  --muted: #68736f;
+  --line: #dde5e1;
+  --line-strong: #a9b8b1;
+  --accent: #16685a;
+  --accent-strong: #0d4f44;
+  --accent-soft: #e5f3ef;
+  --warn: #b9502d;
+  --warn-soft: #faece6;
+  --good: #167650;
+  --good-soft: #e5f5ed;
+  --shadow: 0 20px 60px rgba(23, 32, 28, 0.08);
+}
+
+.dark {
+  --surface: #101412;
+  --panel: #171d1a;
+  --panel-soft: #1d2521;
+  --ink: #edf3f0;
+  --muted: #9aa8a2;
+  --line: #2b3631;
+  --line-strong: #52625b;
+  --accent: #58c7ac;
+  --accent-strong: #8ee2ce;
+  --accent-soft: #17352f;
+  --warn: #ff9c73;
+  --warn-soft: #3b231b;
+  --good: #71d6a2;
+  --good-soft: #19382a;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.wabi-sabi {
+  --surface: #f7f3e8;
+  --panel: #fcf8ef;
+  --panel-soft: #eee6d6;
+  --ink: #211f1b;
+  --muted: #706958;
+  --line: #d7cbb7;
+  --line-strong: #6f6252;
+  --accent: #a23b26;
+  --accent-strong: #6d261a;
+  --accent-soft: #ead8ca;
+  --warn: #9a4529;
+  --warn-soft: #efdcd1;
+  --good: #4c6f4a;
+  --good-soft: #dde8d8;
+  --shadow: none;
+}
+
+.dark.wabi-sabi {
+  --surface: #171613;
+  --panel: #1f1d19;
+  --panel-soft: #29251f;
+  --ink: #eee8dc;
+  --muted: #b5aa99;
+  --line: #494033;
+  --line-strong: #8f806c;
+  --accent: #e17b5e;
+  --accent-strong: #f1a187;
+  --accent-soft: #3b251d;
+  --warn: #f09a72;
+  --warn-soft: #35231d;
+  --good: #9bc796;
+  --good-soft: #1f3023;
+  --shadow: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--surface);
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, rgba(22, 104, 90, 0.08), transparent 360px),
+    var(--surface);
+}
+
+.wabi-sabi body {
+  font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", Georgia, "Times New Roman", serif;
+  background:
+    repeating-linear-gradient(8deg, rgba(72, 62, 47, 0.025) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.22) 0 1px, transparent 1px 13px),
+    linear-gradient(90deg, rgba(33, 31, 27, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(33, 31, 27, 0.026) 1px, transparent 1px),
+    var(--surface);
+  background-size: auto, auto, 34px 34px, 34px 34px, auto;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+svg {
+  flex: none;
+}
+
+.app-shell,
+.panel,
+.metric-card,
+.notice,
+.alert {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.app-shell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  border-radius: 8px;
+  padding: 28px;
+}
+
+.hero-command {
+  display: grid;
+  min-width: min(420px, 100%);
+  gap: 14px;
+}
+
+.hero-total {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--panel-soft);
+}
+
+.hero-total span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hero-total strong {
+  font-size: clamp(1.8rem, 3.2vw, 3rem);
+  line-height: 1;
+}
+
+.hero-total em {
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.hero-actions,
+.utility-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sync-badge {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+}
+
+.sync-badge span {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sync-badge strong {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.sync-badge.is-failed {
+  border-color: color-mix(in srgb, var(--warn) 42%, var(--line));
+}
+
+.sync-badge.is-failed span {
+  color: var(--warn);
+}
+
+.hero-actions .btn-primary,
+.hero-actions .btn-secondary {
+  min-height: 42px;
+}
+
+.wabi-sabi .app-shell,
+.wabi-sabi .panel,
+.wabi-sabi .metric-card,
+.wabi-sabi .notice,
+.wabi-sabi .alert {
+  background: transparent;
+  border-color: var(--line);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.wabi-sabi .app-shell {
+  border-width: 0 0 1px;
+  border-image: linear-gradient(90deg, transparent, var(--line-strong), transparent) 1;
+  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  padding: 34px 0 30px;
+  position: relative;
+}
+
+.wabi-sabi .app-shell::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 72px;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0.78;
+}
+
+.wabi-sabi .app-shell > div:first-child {
+  max-width: 42rem;
+  padding-top: 18px;
+}
+
+.wabi-sabi .hero-command {
+  border-left: 1px solid var(--line);
+  gap: 18px;
+  min-width: 0;
+  padding-left: 28px;
+}
+
+.wabi-sabi .hero-total {
+  border-width: 1px 0;
+  border-radius: 0;
+  padding: 18px 0;
+  background: transparent;
+}
+
+.wabi-sabi .hero-total span {
+  color: var(--accent);
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.wabi-sabi .hero-total strong {
+  font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", Georgia, "Times New Roman", serif;
+  font-size: clamp(2.15rem, 4.4vw, 4.4rem);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.wabi-sabi .hero-total em {
+  color: var(--muted);
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+}
+
+.wabi-sabi .hero-actions {
+  display: grid;
+  grid-template-columns: 1.1fr 0.95fr 0.95fr;
+}
+
+.wabi-sabi .hero-actions .btn-primary,
+.wabi-sabi .hero-actions .btn-secondary {
+  min-height: 46px;
+}
+
+.wabi-sabi .utility-actions {
+  border-top: 1px dashed var(--line);
+  padding-top: 14px;
+}
+
+.wabi-sabi .sync-badge {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding: 0 0 12px;
+  background: transparent;
+}
+
+.wabi-sabi .sync-badge span {
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
+.wabi-sabi .sync-badge strong {
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+}
+
+.wabi-sabi h1,
+.wabi-sabi .panel-header h2,
+.wabi-sabi .metric-card strong {
+  font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", Georgia, "Times New Roman", serif;
+  font-weight: 650;
+}
+
+.wabi-sabi h1 {
+  max-width: 18ch;
+  line-height: 1.12;
+}
+
+.wabi-sabi .eyebrow {
+  color: var(--accent);
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.68rem;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.tabbar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab-button,
+.segmented,
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 0 14px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: 160ms ease;
+}
+
+.wabi-sabi .tab-button,
+.wabi-sabi .segmented,
+.wabi-sabi .toggle,
+.wabi-sabi .btn-primary,
+.wabi-sabi .btn-secondary,
+.wabi-sabi .icon-button,
+.wabi-sabi .input {
+  border-radius: 0;
+}
+
+.wabi-sabi .tab-button.is-active,
+.wabi-sabi .segmented.is-active {
+  border-top-color: transparent;
+}
+
+.tab-button:hover,
+.segmented:hover,
+.toggle:hover {
+  color: var(--ink);
+  background: var(--panel-soft);
+}
+
+.tab-button.is-active,
+.segmented.is-active {
+  color: var(--accent-strong);
+  border-color: var(--line);
+  border-bottom-color: var(--panel);
+  background: var(--panel);
+}
+
+.wabi-sabi .tabbar {
+  gap: 28px;
+  border-bottom-style: dashed;
+  border-color: var(--line);
+}
+
+.wabi-sabi .tab-button {
+  min-height: 44px;
+  border-width: 0 0 2px;
+  padding: 0 0 10px;
+  background: transparent;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.wabi-sabi .tab-button:hover {
+  background: transparent;
+}
+
+.wabi-sabi .tab-button.is-active {
+  border-color: var(--accent);
+  background: transparent;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.account-chip > span {
+  max-width: 190px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wabi-sabi .account-chip > span {
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+}
+
+.muted-copy {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.sync-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--panel-soft);
+}
+
+.sync-panel div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sync-panel strong {
+  color: var(--ink);
+}
+
+.sync-panel span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.sync-panel > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.sync-panel.has-conflict {
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--line));
+  background: color-mix(in srgb, var(--warn) 9%, var(--panel));
+}
+
+.wabi-sabi .sync-panel {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.conflict-panel {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line));
+  border-radius: 8px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+}
+
+.conflict-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.conflict-card {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--panel);
+}
+
+.conflict-card span,
+.conflict-card p {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.conflict-card strong {
+  color: var(--ink);
+}
+
+.conflict-diff {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.wabi-sabi .conflict-panel,
+.wabi-sabi .conflict-card {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.btn-primary,
+.btn-secondary,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: 160ms ease;
+}
+
+.btn-primary {
+  border: 1px solid var(--accent);
+  color: #fff;
+  background: var(--accent);
+}
+
+.wabi-sabi .btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.wabi-sabi .btn-primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.btn-primary:hover {
+  background: var(--accent-strong);
+}
+
+.btn-secondary,
+.icon-button {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.wabi-sabi .btn-secondary,
+.wabi-sabi .icon-button,
+.wabi-sabi .toggle {
+  background: transparent;
+  border-color: var(--line-strong);
+}
+
+.wabi-sabi .btn-secondary:hover,
+.wabi-sabi .icon-button:hover,
+.wabi-sabi .toggle:hover {
+  background: var(--panel-soft);
+}
+
+.btn-secondary:hover,
+.icon-button:hover {
+  border-color: var(--line-strong);
+  background: var(--panel-soft);
+}
+
+.btn-secondary.danger-soft {
+  border-color: color-mix(in srgb, var(--danger) 36%, var(--line));
+  color: var(--danger);
+}
+
+.btn-secondary.danger-soft:hover {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
+}
+
+.icon-button {
+  width: 38px;
+  padding: 0;
+}
+
+.notice,
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+}
+
+.notice {
+  color: var(--good);
+  background: var(--good-soft);
+}
+
+.alert {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.panel {
+  min-width: 0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.wabi-sabi .panel {
+  border-width: 1px 0 0;
+  border-image: linear-gradient(90deg, var(--line-strong), transparent 72%) 1;
+  padding: 34px 0 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.wabi-sabi .panel-header {
+  border-bottom: 0;
+  margin-bottom: 28px;
+  padding-bottom: 0;
+}
+
+.wabi-sabi .panel-header h2 {
+  font-size: 1.18rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.panel-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.wabi-sabi .panel-icon {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  width: 26px;
+  height: 26px;
+}
+
+.wabi-sabi .panel-icon svg,
+.wabi-sabi .icon-button svg,
+.wabi-sabi .btn-secondary svg {
+  stroke-width: 1.55;
+}
+
+.panel-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chart-frame {
+  width: 100%;
+  min-width: 0;
+  height: 18rem;
+  min-height: 18rem;
+}
+
+.chart-loading {
+  display: grid;
+  min-height: 18rem;
+  place-items: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.wabi-sabi .chart-loading {
+  border-width: 0 0 1px;
+  border-radius: 0;
+}
+
+.metric-card {
+  min-height: 142px;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.wabi-sabi .metric-card {
+  min-height: 118px;
+  border-width: 0;
+  border-image: none;
+  padding: 0 18px 0 0;
+}
+
+.wabi-sabi .metric-grid {
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
+  gap: 0;
+  padding: 14px 0;
+}
+
+.wabi-sabi .metric-grid .metric-card + .metric-card {
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
+}
+
+.wabi-sabi .overview-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wabi-sabi .overview-primary {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.wabi-sabi .overview-primary .panel + .panel {
+  margin-top: 12px;
+}
+
+.wabi-sabi .allocation-ledger {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+
+.wabi-sabi .allocation-ledger > * {
+  margin-top: 0 !important;
+}
+
+.wabi-sabi .allocation-ledger .allocation-line {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 0;
+  padding: 0 18px;
+}
+
+.wabi-sabi .allocation-ledger .allocation-line:first-child {
+  padding-left: 0;
+}
+
+.wabi-sabi .allocation-ledger .allocation-line:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.wabi-sabi .overview-secondary {
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 40px;
+}
+
+.wabi-sabi .metric-card.tone-good,
+.wabi-sabi .metric-card.tone-warn {
+  border-color: var(--line);
+}
+
+.wabi-sabi .metric-card span {
+  color: var(--accent);
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
+.wabi-sabi .metric-card strong {
+  margin-top: 10px;
+  font-size: clamp(1.2rem, 1.7vw, 1.75rem);
+  line-height: 1.18;
+}
+
+.wabi-sabi .metric-card p {
+  margin-top: 9px;
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+}
+
+.metric-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  line-height: 1.08;
+}
+
+.metric-card p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.metric-card.tone-good {
+  border-color: color-mix(in srgb, var(--good) 28%, var(--line));
+}
+
+.metric-card.tone-warn {
+  border-color: color-mix(in srgb, var(--warn) 34%, var(--line));
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field > span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: var(--panel);
+  outline: none;
+  transition: 160ms ease;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 3px;
+}
+
+.wabi-sabi button:focus-visible,
+.wabi-sabi input:focus-visible,
+.wabi-sabi select:focus-visible,
+.wabi-sabi a:focus-visible {
+  outline-offset: 5px;
+}
+
+.wabi-sabi .input {
+  border-width: 0 0 1px;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.wabi-sabi .input:focus {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.wabi-sabi select.input {
+  padding-left: 4px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wabi-sabi table {
+  border-top: 1px solid var(--line-strong);
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 13px 10px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+.wabi-sabi th,
+.wabi-sabi td {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+td {
+  color: var(--ink);
+}
+
+tbody tr:hover {
+  background: var(--panel-soft);
+}
+
+.wabi-sabi tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-soft) 66%, transparent);
+}
+
+.asset-name {
+  display: grid;
+  gap: 3px;
+  min-width: 190px;
+}
+
+.asset-name span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: var(--panel);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wabi-sabi .category-pill {
+  min-height: 22px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+}
+
+.category-pill i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.wabi-sabi .category-pill i {
+  width: 10px;
+  height: 2px;
+  border-radius: 0;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-actions .icon-button {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.table-input {
+  min-width: 130px;
+}
+
+.native-edit {
+  display: flex;
+  gap: 6px;
+}
+
+.currency-field {
+  width: 78px;
+  min-width: 78px;
+}
+
+.allocation-line {
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 14px;
+}
+
+.allocation-line + .allocation-line {
+  padding-top: 4px;
+}
+
+.allocation-meta,
+.allocation-action,
+.action-row,
+.history-row,
+.rate-row,
+.target-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cashflow-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cashflow-copy span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.allocation-meta span:last-child,
+.history-row span,
+.empty-state {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.allocation-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--panel-soft);
+}
+
+.wabi-sabi .allocation-bar {
+  height: 5px;
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--line) 0,
+    var(--line) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+}
+
+.allocation-bar span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+}
+
+.wabi-sabi .allocation-bar span {
+  border-radius: 0;
+}
+
+.good-text {
+  color: var(--good);
+  font-weight: 750;
+}
+
+.warn-text {
+  color: var(--warn);
+  font-weight: 750;
+}
+
+.action-row,
+.history-row {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel-soft);
+}
+
+.archive-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.trade-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.trade-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--panel-soft);
+}
+
+.trade-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.trade-row div span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.trade-row > strong {
+  white-space: nowrap;
+}
+
+.trade-side {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.trade-side.is-buy {
+  color: var(--good);
+  background: color-mix(in srgb, var(--good) 12%, transparent);
+}
+
+.trade-side.is-sell {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.subsection-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink);
+}
+
+.subsection-heading span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.archive-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--panel-soft) 76%, transparent);
+}
+
+.wabi-sabi .archive-list {
+  border-top-color: var(--line-strong);
+}
+
+.wabi-sabi .trade-list {
+  border-top-color: var(--line-strong);
+}
+
+.wabi-sabi .archive-row,
+.wabi-sabi .trade-row {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.wabi-sabi .trade-side {
+  border-radius: 0;
+  background: transparent;
+}
+
+.wabi-sabi .action-row,
+.wabi-sabi .history-row,
+.wabi-sabi .empty-state {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.history-main,
+.history-metrics {
+  display: grid;
+  gap: 3px;
+}
+
+.history-metrics {
+  justify-items: end;
+  text-align: right;
+}
+
+.history-metrics strong {
+  white-space: nowrap;
+}
+
+.empty-state {
+  display: grid;
+  min-height: 120px;
+  place-items: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .sync-panel,
+  .conflict-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sync-panel {
+    display: grid;
+  }
+
+  .sync-panel > span {
+    white-space: normal;
+  }
+
+  .history-row,
+  .archive-row,
+  .trade-row,
+  .action-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .history-metrics {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .subsection-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .toolbar,
+  .utility-actions,
+  .account-chip {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .toolbar > *,
+  .utility-actions > *,
+  .account-chip > button {
+    flex: 1 1 100%;
+  }
+
+  .account-chip {
+    display: grid;
+  }
+
+  .account-chip > span {
+    max-width: none;
+  }
+}
+
+.rate-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+}
+
+.rate-row span {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.target-row {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr) 74px;
+}
+
+.target-row input[type="range"] {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+.percent-input {
+  text-align: right;
+}
+
+.target-total {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.wabi-sabi .target-total {
+  border-radius: 0;
+  border-left: 3px solid currentColor;
+}
+
+.target-total.is-good {
+  color: var(--good);
+  background: var(--good-soft);
+}
+
+.target-total.is-warn {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.toggle {
+  width: 100%;
+  border-color: var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0 24px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.wabi-sabi .footer {
+  font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", Georgia, "Times New Roman", serif;
+}
+
+@media (max-width: 1024px) {
+  .wabi-sabi .overview-metrics,
+  .wabi-sabi .allocation-ledger {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wabi-sabi .overview-secondary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .wabi-sabi .allocation-ledger .allocation-line:nth-child(2) {
+    border-right: 0;
+  }
+
+  .wabi-sabi .allocation-ledger .allocation-line:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 20px;
+  }
+
+  .app-shell,
+  .allocation-meta,
+  .allocation-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-command {
+    width: 100%;
+  }
+
+  .hero-actions,
+  .utility-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .sync-badge {
+    min-width: 0;
+  }
+
+  .tabbar {
+    padding-bottom: 2px;
+  }
+
+  .table-wrap {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .wabi-sabi .app-shell {
+    display: flex;
+    padding: 24px 0;
+  }
+
+  .wabi-sabi .hero-command {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .wabi-sabi .hero-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .wabi-sabi .overview-metrics,
+  .wabi-sabi .allocation-ledger,
+  .wabi-sabi .overview-secondary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wabi-sabi .allocation-ledger .allocation-line {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0;
+  }
+
+  .wabi-sabi .allocation-ledger .allocation-line:first-child {
+    padding-top: 0;
+  }
+
+  .wabi-sabi .allocation-ledger .allocation-line:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .target-row {
+    grid-template-columns: 1fr;
+  }
+
+  .panel,
+  .metric-card {
+    padding: 16px;
+  }
+
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  th,
+  td {
+    padding: 11px 8px;
+  }
+}

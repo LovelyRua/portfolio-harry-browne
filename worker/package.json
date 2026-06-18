@@ -1,0 +1,25 @@
+{
+  "name": "portfolio-harry-browne-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply portfolio-harry-browne --local",
+    "db:migrate:remote": "wrangler d1 migrations apply portfolio-harry-browne --remote",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260617.1",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.9",
+    "wrangler": "^4.101.0"
+  },
+  "overrides": {
+    "esbuild": "0.28.1",
+    "ws": "8.21.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio-harry-browne",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-18",
+  "assets": {
+    "directory": "../frontend/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/health"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "portfolio-harry-browne",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "JWT_ISSUER": "portfolio-harry-browne",
+    "JWT_EXPIRES_SECONDS": "604800"
+  },
+  "observability": {
+    "enabled": false
+  }
+}
