@@ -42,6 +42,11 @@ export default defineConfig({
   build: {
     target: 'es2022',
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2022',
+    },
+  },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
   },
