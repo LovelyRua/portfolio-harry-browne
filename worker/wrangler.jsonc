@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "portfolio-harry-browne",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "101c5607-b96d-48ff-9b23-a835c09d2daa",
       "migrations_dir": "migrations"
     }
   ],

@@ -99,16 +99,17 @@ jobs:
           name: frontend-dist
           path: frontend/dist
 
-      - name: Configure production D1 database
+      - name: Create deployment secrets file
         working-directory: worker
         env:
-          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          if [ -z "$CLOUDFLARE_D1_DATABASE_ID" ]; then
-            echo "::error::Missing CLOUDFLARE_D1_DATABASE_ID secret"
+          if [ -z "$JWT_SECRET" ]; then
+            echo "::error::Missing JWT_SECRET secret"
             exit 1
           fi
-          node -e "const fs=require('fs'); const p='wrangler.jsonc'; const c=fs.readFileSync(p,'utf8'); fs.writeFileSync(p,c.replace('00000000-0000-0000-0000-000000000000',process.env.CLOUDFLARE_D1_DATABASE_ID));"
+          node -e "require('fs').writeFileSync('.secrets.production.json', JSON.stringify({ JWT_SECRET: process.env.JWT_SECRET }))"
+          chmod 600 .secrets.production.json
 
       - name: Apply D1 migrations and deploy
         uses: cloudflare/wrangler-action@v3
@@ -116,10 +117,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
-          wranglerVersion: 4.102.0
+          wranglerVersion: 4.103.0
           preCommands: wrangler d1 migrations apply portfolio-harry-browne --remote
-          command: deploy
-          secrets: |
-            JWT_SECRET
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          command: deploy --secrets-file .secrets.production.json
+
+      - name: Remove deployment secrets file
+        if: always()
+        working-directory: worker
+        run: rm -f .secrets.production.json

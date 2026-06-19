@@ -45,10 +45,11 @@ Add these GitHub repository or `production` environment secrets:
 
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_D1_DATABASE_ID`
 - `JWT_SECRET`
 
 Create a narrowly scoped Cloudflare API token with permission to edit Workers
 scripts and D1 for the target account. `JWT_SECRET` must contain at least 32
-random characters. The D1 database ID is injected into `wrangler.jsonc` only
-inside the CI runner; it is not committed to the repository.
+random characters. The non-sensitive D1 database ID is stored directly in
+`worker/wrangler.jsonc`. CI passes `JWT_SECRET` through Wrangler's
+`--secrets-file` option, which uploads code and secrets atomically and also
+works for the first deployment.
