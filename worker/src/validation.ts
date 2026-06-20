@@ -16,6 +16,9 @@ export function validateAuth(value: unknown): ValidationResult<{ email: string; 
 export function validateUpload(value: unknown): ValidationResult<{ payload: Record<string, unknown> }> {
   if (!isObject(value) || !isObject(value.payload)) return invalid('payload must be an object');
   const payload = value.payload;
+  if (payload.format === 'pp-e2ee-v1') {
+    return validateEncryptedEnvelope(payload);
+  }
   const details: string[] = [];
   if (!Array.isArray(payload.assets)) details.push('assets must be an array');
   if (!isObject(payload.exchangeRates)) details.push('exchangeRates must be an object');
@@ -40,6 +43,31 @@ export function validateUpload(value: unknown): ValidationResult<{ payload: Reco
     }
   }
   return details.length ? { ok: false, details } : { ok: true, value: { payload } };
+}
+
+function validateEncryptedEnvelope(payload: Record<string, unknown>): ValidationResult<{ payload: Record<string, unknown> }> {
+  const cipher = isObject(payload.cipher) ? payload.cipher : null;
+  const userKey = isObject(payload.userKey) ? payload.userKey : null;
+  const recoveryKey = isObject(payload.recoveryKey) ? payload.recoveryKey : null;
+  const encodedFields = [
+    cipher?.iv,
+    cipher?.ciphertext,
+    userKey?.salt,
+    userKey?.iv,
+    userKey?.wrappedKey,
+    recoveryKey?.wrappedKey,
+  ];
+  const valid = cipher?.algorithm === 'AES-256-GCM'
+    && userKey?.algorithm === 'PBKDF2-SHA256+A256GCM'
+    && Number.isInteger(userKey.iterations)
+    && Number(userKey.iterations) >= 100_000
+    && Number(userKey.iterations) <= 1_000_000
+    && recoveryKey?.algorithm === 'RSA-OAEP-256'
+    && typeof recoveryKey.keyId === 'string'
+    && recoveryKey.keyId.length > 0
+    && encodedFields.every((field) => typeof field === 'string' && field.length > 0)
+    && JSON.stringify(payload).length <= 400_000;
+  return valid ? { ok: true, value: { payload } } : invalid('encrypted payload is invalid');
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

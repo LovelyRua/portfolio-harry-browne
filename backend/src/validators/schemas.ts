@@ -32,4 +32,25 @@ export const portfolioSchema = z.object({
   history: z.array(z.unknown()).optional(),
 }).passthrough();
 
-export const uploadSchema = z.object({ payload: portfolioSchema });
+const encryptedCloudSchema = z.object({
+  format: z.literal('pp-e2ee-v1'),
+  cipher: z.object({
+    algorithm: z.literal('AES-256-GCM'),
+    iv: z.string().min(1),
+    ciphertext: z.string().min(1).max(400_000),
+  }),
+  userKey: z.object({
+    algorithm: z.literal('PBKDF2-SHA256+A256GCM'),
+    iterations: z.number().int().min(100_000).max(1_000_000),
+    salt: z.string().min(1),
+    iv: z.string().min(1),
+    wrappedKey: z.string().min(1),
+  }),
+  recoveryKey: z.object({
+    algorithm: z.literal('RSA-OAEP-256'),
+    keyId: z.string().min(1).max(200),
+    wrappedKey: z.string().min(1).max(10_000),
+  }),
+});
+
+export const uploadSchema = z.object({ payload: z.union([portfolioSchema, encryptedCloudSchema]) });

@@ -69,6 +69,39 @@ describe('API', () => {
     expect(downloaded.json().payload.assets[0].name).toBe('Cash');
   });
 
+  test('stores encrypted cloud envelopes without inspecting plaintext', async () => {
+    const token = await tokenFor(app);
+    const encrypted = {
+      format: 'pp-e2ee-v1',
+      cipher: { algorithm: 'AES-256-GCM', iv: 'aXY=', ciphertext: 'Y2lwaGVydGV4dA==' },
+      userKey: {
+        algorithm: 'PBKDF2-SHA256+A256GCM',
+        iterations: 250000,
+        salt: 'c2FsdA==',
+        iv: 'aXY=',
+        wrappedKey: 'd3JhcHBlZA==',
+      },
+      recoveryKey: {
+        algorithm: 'RSA-OAEP-256',
+        keyId: 'recovery-test',
+        wrappedKey: 'cmVjb3Zlcnk=',
+      },
+    };
+    const uploaded = await app.inject({
+      method: 'PUT',
+      url: '/api/data',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { payload: encrypted },
+    });
+    expect(uploaded.statusCode).toBe(200);
+    const downloaded = await app.inject({
+      method: 'GET',
+      url: '/api/data',
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(downloaded.json().payload).toEqual(encrypted);
+  });
+
   test('rejects invalid portfolio data', async () => {
     const token = await tokenFor(app);
     const response = await app.inject({

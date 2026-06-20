@@ -4,7 +4,8 @@ import { createApiClient } from '../api/client';
 type AuthContextValue = {
   token: string | null;
   accountEmail: string | null;
-  setToken: (t: string | null, email?: string | null) => void;
+  cloudPassphrase: string | null;
+  setToken: (t: string | null, email?: string | null, passphrase?: string | null) => void;
   api: ReturnType<typeof createApiClient>;
 };
 
@@ -20,11 +21,13 @@ export function AuthProvider(props: { children: React.ReactNode }) {
   const [accountEmail, setAccountEmail] = useState<string | null>(() => {
     return localStorage.getItem(EMAIL_KEY);
   });
+  const [cloudPassphrase, setCloudPassphrase] = useState<string | null>(null);
 
-  const setToken = (t: string | null, email?: string | null) => {
+  const setToken = (t: string | null, email?: string | null, passphrase?: string | null) => {
     setTokenState(t);
     if (t) {
       localStorage.setItem(TOKEN_KEY, t);
+      setCloudPassphrase(passphrase ?? null);
       if (email) {
         setAccountEmail(email);
         localStorage.setItem(EMAIL_KEY, email);
@@ -33,6 +36,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(EMAIL_KEY);
       setAccountEmail(null);
+      setCloudPassphrase(null);
     }
   };
 
@@ -40,7 +44,10 @@ export function AuthProvider(props: { children: React.ReactNode }) {
     return createApiClient(() => token);
   }, [token]);
 
-  const value = useMemo(() => ({ token, accountEmail, setToken, api }), [token, accountEmail, api]);
+  const value = useMemo(
+    () => ({ token, accountEmail, cloudPassphrase, setToken, api }),
+    [token, accountEmail, cloudPassphrase, api],
+  );
   return <AuthContext.Provider value={value}>{props.children}</AuthContext.Provider>;
 }
 

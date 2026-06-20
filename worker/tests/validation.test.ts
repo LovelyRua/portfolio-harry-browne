@@ -23,4 +23,25 @@ describe('Worker validation', () => {
       },
     }).ok).toBe(true);
   });
+
+  test('accepts an encrypted cloud envelope', () => {
+    expect(validateUpload({
+      payload: {
+        format: 'pp-e2ee-v1',
+        cipher: { algorithm: 'AES-256-GCM', iv: 'aXY=', ciphertext: 'Y2lwaGVydGV4dA==' },
+        userKey: {
+          algorithm: 'PBKDF2-SHA256+A256GCM',
+          iterations: 250000,
+          salt: 'c2FsdA==',
+          iv: 'aXY=',
+          wrappedKey: 'd3JhcHBlZA==',
+        },
+        recoveryKey: {
+          algorithm: 'RSA-OAEP-256',
+          keyId: 'recovery-test',
+          wrappedKey: 'cmVjb3Zlcnk=',
+        },
+      },
+    }).ok).toBe(true);
+  });
 });

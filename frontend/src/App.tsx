@@ -33,6 +33,15 @@ import {
 import { LoginPanel } from './auth/LoginPanel';
 import { useAuth } from './auth/AuthContext';
 import { ApiError } from './api/client';
+import {
+  decryptCloudPayload,
+  encryptCloudPayload,
+  isEncryptedCloudEnvelope,
+} from './crypto/cloudEncryption';
+import {
+  CLOUD_RECOVERY_KEY_ID,
+  CLOUD_RECOVERY_PUBLIC_KEY,
+} from './config/cloudRecoveryPublicKey';
 import { AppData, CURRENT_DATA_VERSION, migrateAppData } from './dataModel';
 import { Category, CATEGORY_COLORS, DEFAULT_RATES, ExchangeRates, HistorySnapshot, Asset } from './types';
 import { cn, formatCurrency, formatPercent, parseAmount } from './utils';
@@ -134,12 +143,15 @@ function formatSyncTimestamp(value?: string) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function normalizeCloudPayload(payload: unknown): Partial<AppData> | null {
+async function decodeCloudPayload(payload: unknown, passphrase: string): Promise<Partial<AppData> | null> {
   try {
     const parsed = typeof payload === 'string' ? JSON.parse(payload) : payload;
+    if (isEncryptedCloudEnvelope(parsed)) {
+      return await decryptCloudPayload<Partial<AppData>>(parsed, passphrase);
+    }
     return parsed && typeof parsed === 'object' ? (parsed as Partial<AppData>) : null;
   } catch {
-    return null;
+    throw new Error('Cloud backup could not be decrypted with this account password.');
   }
 }
 
@@ -189,7 +201,7 @@ function describePortfolioDiff(local: AppData, cloud: Partial<AppData>) {
 }
 
 export default function App() {
-  const { token, accountEmail, api, setToken } = useAuth();
+  const { token, accountEmail, cloudPassphrase, api, setToken } = useAuth();
   const cloudLoadRef = useRef(false);
   const uploadTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -250,6 +262,12 @@ export default function App() {
       setSyncStatus('local');
       return;
     }
+    if (!cloudPassphrase) {
+      setToken(null);
+      setSyncStatus('local');
+      showNotice('Sign in again to unlock encrypted cloud backup.');
+      return;
+    }
     setSyncStatus('loading');
     cloudLoadRef.current = true;
     let cancelled = false;
@@ -259,7 +277,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [api, token]);
+  }, [api, cloudPassphrase, token]);
 
   const rates = data.exchangeRates;
   const baseCurrency = data.baseCurrency;
@@ -361,6 +379,11 @@ export default function App() {
       showNotice('Sign in to use cloud backup.');
       return;
     }
+    if (!cloudPassphrase) {
+      setToken(null);
+      showNotice('Sign in again to unlock cloud encryption.');
+      return;
+    }
 
     setSyncBusy(true);
     setSyncStatus('syncing');
@@ -368,7 +391,9 @@ export default function App() {
       const serverState = await api.data.get();
       if (serverState.updatedAt && lastCloudUpdatedAt && serverState.updatedAt !== lastCloudUpdatedAt) {
         const message = `Cloud backup changed at ${formatSyncTimestamp(serverState.updatedAt)}.`;
-        const cloudPayload = normalizeCloudPayload(serverState.payload);
+        const cloudPayload = serverState.payload
+          ? await decodeCloudPayload(serverState.payload, cloudPassphrase)
+          : null;
         setCloudConflict(cloudPayload ? { updatedAt: serverState.updatedAt, payload: cloudPayload } : null);
         if (!manual) {
           setSyncStatus('failed');
@@ -382,7 +407,13 @@ export default function App() {
           return;
         }
       }
-      const response = await api.data.upload(data);
+      const encrypted = await encryptCloudPayload(
+        data,
+        cloudPassphrase,
+        CLOUD_RECOVERY_PUBLIC_KEY,
+        CLOUD_RECOVERY_KEY_ID,
+      );
+      const response = await api.data.upload(encrypted);
       setSyncStatus('synced');
       setSyncConflict(null);
       setCloudConflict(null);
@@ -402,6 +433,11 @@ export default function App() {
       showNotice('Sign in to load a cloud backup.');
       return;
     }
+    if (!cloudPassphrase) {
+      setToken(null);
+      showNotice('Sign in again to unlock cloud encryption.');
+      return;
+    }
     if (manual && !window.confirm('Load the cloud backup? Current local data will be saved as a safety snapshot first.')) return;
 
     setSyncBusy(true);
@@ -419,7 +455,7 @@ export default function App() {
         return;
       }
 
-      const payload = typeof response.payload === 'string' ? JSON.parse(response.payload) : response.payload;
+      const payload = await decodeCloudPayload(response.payload, cloudPassphrase);
       if (payload && typeof payload === 'object') {
         setData((current) => {
           const cloudPayload = migrateAppData(payload, current);
@@ -458,13 +494,19 @@ export default function App() {
   }
 
   async function overwriteCloudConflict() {
-    if (!token) return;
+    if (!token || !cloudPassphrase) return;
     if (!window.confirm('Overwrite the newer cloud backup with this local portfolio?')) return;
 
     setSyncBusy(true);
     setSyncStatus('syncing');
     try {
-      const response = await api.data.upload(data);
+      const encrypted = await encryptCloudPayload(
+        data,
+        cloudPassphrase,
+        CLOUD_RECOVERY_PUBLIC_KEY,
+        CLOUD_RECOVERY_KEY_ID,
+      );
+      const response = await api.data.upload(encrypted);
       setSyncConflict(null);
       setCloudConflict(null);
       setSyncStatus('synced');
@@ -1209,7 +1251,7 @@ export default function App() {
 
         <footer className="footer">
           <Lock className="h-4 w-4" />
-          Local-first by default. Signing in saves a plain JSON backup through the project API. {syncCopy.footer}
+          Local-first by default. Cloud backups are encrypted in this browser before upload. {syncCopy.footer}
         </footer>
       </div>
 
@@ -1218,8 +1260,8 @@ export default function App() {
         onClose={() => setShowLogin(false)}
         mode={authMode}
         onModeChange={setAuthMode}
-        onSuccessToken={(nextToken, email) => {
-          setToken(nextToken, email);
+        onSuccessToken={(nextToken, email, encryptionPassphrase) => {
+          setToken(nextToken, email, encryptionPassphrase);
           setShowLogin(false);
         }}
         api={api}

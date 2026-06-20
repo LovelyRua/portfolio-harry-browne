@@ -51,11 +51,18 @@ describe('portfolio app integration', () => {
 
     renderApp();
     await user.click(screen.getByRole('button', { name: 'Sync' }));
-    expect(screen.getByRole('dialog', { name: 'Sign in' })).toBeVisible();
+    const signInDialog = screen.getByRole('dialog', { name: 'Sign in' });
+    expect(signInDialog).toBeVisible();
 
-    await user.type(screen.getByLabelText('Email'), 'qa@example.test');
-    await user.type(screen.getByLabelText('Password'), 'ValidPass123');
-    await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.type(within(signInDialog).getByLabelText('Email'), 'qa@example.test');
+    await user.type(within(signInDialog).getByLabelText('Password'), 'ValidPass123');
+    const encryptionInput = within(signInDialog)
+      .getByText('Cloud encryption passphrase')
+      .closest('label')
+      ?.querySelector('input');
+    expect(encryptionInput).not.toBeNull();
+    await user.type(encryptionInput!, 'PrivateCloudPass123');
+    await user.click(within(signInDialog).getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => expect(screen.getByText('qa@example.test')).toBeVisible());
     await waitFor(() => expect(screen.getByText('Synced')).toBeVisible());
@@ -68,6 +75,13 @@ describe('portfolio app integration', () => {
       expect.stringMatching(/\/data$/),
       expect.objectContaining({ method: 'GET' }),
     );
+    await waitFor(() => {
+      const uploadCall = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT');
+      expect(uploadCall).toBeDefined();
+      const body = String(uploadCall?.[1]?.body);
+      expect(body).toContain('pp-e2ee-v1');
+      expect(body).not.toContain('US Total Market ETF');
+    });
   });
 
   test('edits an asset and persists the updated portfolio locally', async () => {

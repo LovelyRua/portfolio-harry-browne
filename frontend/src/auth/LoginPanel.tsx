@@ -8,7 +8,7 @@ type ApiClient = ReturnType<typeof createApiClient>;
 export function LoginPanel(props: {
   mode: 'login' | 'register';
   onModeChange: (m: 'login' | 'register') => void;
-  onSuccessToken: (token: string, email: string) => void;
+  onSuccessToken: (token: string, email: string, password: string) => void;
   onClose: () => void;
   api: ApiClient;
   theme: 'modern' | 'wabi-sabi';
@@ -16,6 +16,7 @@ export function LoginPanel(props: {
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [encryptionPassphrase, setEncryptionPassphrase] = useState('');
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -32,7 +33,9 @@ export function LoginPanel(props: {
         setErrorMsg('Account created. Sign in to sync this portfolio.');
       } else {
         const response = await props.api.auth.login({ email, password });
-        props.onSuccessToken(response.accessToken, email);
+        props.onSuccessToken(response.accessToken, email, encryptionPassphrase);
+        setPassword('');
+        setEncryptionPassphrase('');
       }
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : 'Request failed');
@@ -58,7 +61,7 @@ export function LoginPanel(props: {
               {props.mode === 'login' ? 'Sign in' : 'Create account'}
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Local data works without an account. Sign in when you want cloud backup across devices.
+              Your separate encryption passphrase unlocks cloud data locally and is never sent to the API.
             </p>
           </div>
           <button className="icon-button" onClick={props.onClose} aria-label="Close" type="button">
@@ -95,6 +98,23 @@ export function LoginPanel(props: {
               <small className="field-hint">Use 10+ characters with uppercase, lowercase, and a number.</small>
             )}
           </label>
+          {props.mode === 'login' && (
+            <label className="field">
+              <span>Cloud encryption passphrase</span>
+              <input
+                className="input"
+                value={encryptionPassphrase}
+                onChange={(event) => setEncryptionPassphrase(event.target.value)}
+                type="password"
+                autoComplete="off"
+                minLength={12}
+                required
+              />
+              <small className="field-hint">
+                12+ characters. This never leaves your browser and may differ from the account password.
+              </small>
+            </label>
+          )}
 
           {errorMsg && (
             <div role="status" className={cn('rounded-lg px-3 py-2 text-sm', errorMsg.startsWith('Account') ? 'bg-[var(--good-soft)] text-[var(--good)]' : 'bg-[var(--warn-soft)] text-[var(--warn)]')}>
@@ -114,6 +134,7 @@ export function LoginPanel(props: {
             props.onModeChange(props.mode === 'login' ? 'register' : 'login');
             setErrorMsg(null);
             setPassword('');
+            setEncryptionPassphrase('');
           }}
         >
           {props.mode === 'login' ? 'Need an account? Create one' : 'Already have an account? Sign in'}

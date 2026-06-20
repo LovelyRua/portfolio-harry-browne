@@ -16,10 +16,13 @@ Use this checklist for routine safety reviews without destructive testing.
 
 - Signed-out data remains local-only.
 - Sign-out does not delete local portfolio data.
+- Cloud uploads contain a `pp-e2ee-v1` envelope and no asset names or amounts.
+- The cloud encryption passphrase is never included in API requests.
+- The recovery private key is absent from Git, CI and deployed assets.
 - Manual cloud load creates a safety snapshot first.
 - Cloud conflict state offers explicit local/cloud choices.
 - Sync failures preserve local data.
-- UI copy does not claim encryption.
+- UI copy accurately describes recoverable client-side encryption.
 
 ## Configuration
 
