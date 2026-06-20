@@ -71,6 +71,18 @@ export function createApiClient(getToken: TokenGetter) {
           body: JSON.stringify(params),
         });
       },
+      async forgotPassword(params: { email: string }) {
+        return request<{ ok: true }>('/auth/forgot-password', {
+          method: 'POST',
+          body: JSON.stringify(params),
+        });
+      },
+      async resetPassword(params: { email: string; code: string; newPassword: string }) {
+        return request<{ ok: true }>('/auth/reset-password', {
+          method: 'POST',
+          body: JSON.stringify(params),
+        });
+      },
     },
     data: {
       async get() {

@@ -64,3 +64,7 @@ as backups encrypted for its matching `keyId` may still exist.
   to persistent `localStorage`.
 - Metadata such as account email, timestamps and encrypted payload size remains
   visible to the service.
+- A forgotten-password reset changes account authentication but cannot decrypt
+  cloud backups wrapped by the forgotten password. If the browser still has
+  local portfolio data, signing in with the new password will encrypt and sync
+  it again. Otherwise the offline recovery private key is required.

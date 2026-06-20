@@ -21,6 +21,8 @@ export interface UserRow {
   email_verified_at: number | null;
   verification_hash: string | null;
   verification_expiry: number | null;
+  password_reset_hash: string | null;
+  password_reset_expiry: number | null;
   token_version: number;
   failed_login_count: number;
   locked_until: number | null;

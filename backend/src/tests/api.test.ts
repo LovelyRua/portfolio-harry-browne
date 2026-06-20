@@ -122,6 +122,48 @@ describe('API', () => {
     expect(login.statusCode).toBe(200);
   });
 
+  test('resets a forgotten password and invalidates existing sessions', async () => {
+    const email = 'forgot@example.test';
+    const oldPassword = 'OriginalPass123';
+    const oldToken = await tokenFor(app, mailer, email, oldPassword);
+    expect((await app.inject({
+      method: 'POST',
+      url: '/api/auth/forgot-password',
+      payload: { email },
+    })).statusCode).toBe(200);
+    expect((await app.inject({
+      method: 'POST',
+      url: '/api/auth/reset-password',
+      payload: { email, code: mailer.codeFor(email), newPassword: 'ResetValidPass456' },
+    })).statusCode).toBe(200);
+
+    expect((await app.inject({
+      method: 'GET',
+      url: '/api/data',
+      headers: { authorization: `Bearer ${oldToken}` },
+    })).statusCode).toBe(401);
+    expect((await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password: oldPassword },
+    })).statusCode).toBe(401);
+    expect((await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password: 'ResetValidPass456' },
+    })).statusCode).toBe(200);
+  });
+
+  test('does not reveal whether a password reset email exists', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/auth/forgot-password',
+      payload: { email: 'missing@example.test' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ ok: true });
+  });
+
   test('uploads and downloads portfolio data', async () => {
     const token = await tokenFor(app, mailer);
     const uploaded = await app.inject({
@@ -217,6 +259,10 @@ class TestMailer implements Mailer {
   private codes = new Map<string, string>();
 
   async sendVerificationCode(email: string, code: string) {
+    this.codes.set(email, code);
+  }
+
+  async sendPasswordResetCode(email: string, code: string) {
     this.codes.set(email, code);
   }
 

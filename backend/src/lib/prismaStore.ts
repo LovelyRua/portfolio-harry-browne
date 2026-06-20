@@ -14,6 +14,8 @@ export class PrismaStore implements DataStore {
         emailVerifiedAt: true,
         verificationHash: true,
         verificationExpiry: true,
+        passwordResetHash: true,
+        passwordResetExpiry: true,
         tokenVersion: true,
       },
     });
@@ -29,6 +31,8 @@ export class PrismaStore implements DataStore {
         emailVerifiedAt: true,
         verificationHash: true,
         verificationExpiry: true,
+        passwordResetHash: true,
+        passwordResetExpiry: true,
         tokenVersion: true,
       },
     });
@@ -44,6 +48,8 @@ export class PrismaStore implements DataStore {
         emailVerifiedAt: true,
         verificationHash: true,
         verificationExpiry: true,
+        passwordResetHash: true,
+        passwordResetExpiry: true,
         tokenVersion: true,
       },
     });
@@ -66,10 +72,22 @@ export class PrismaStore implements DataStore {
   async updatePassword(userId: string, passwordHash: string) {
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash, tokenVersion: { increment: 1 } },
+      data: {
+        passwordHash,
+        tokenVersion: { increment: 1 },
+        passwordResetHash: null,
+        passwordResetExpiry: null,
+      },
       select: { tokenVersion: true },
     });
     return user.tokenVersion;
+  }
+
+  async setPasswordReset(userId: string, resetHash: string, resetExpiry: Date) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordResetHash: resetHash, passwordResetExpiry: resetExpiry },
+    });
   }
 
   async getData(userId: string) {

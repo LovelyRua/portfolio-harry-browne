@@ -8,6 +8,7 @@ import {
   authSchema,
   changePasswordSchema,
   emailSchema,
+  resetPasswordSchema,
   verifyEmailSchema,
 } from '../validators/schemas';
 
@@ -16,6 +17,8 @@ const requests = new Map<string, { count: number; resetAt: number }>();
 const VERIFICATION_TTL_MS = 10 * 60_000;
 
 export async function authRoutes(app: FastifyInstance, store: DataStore, mailer: Mailer) {
+  failures.clear();
+  requests.clear();
   app.post('/api/auth/register', { preHandler: authRateLimit }, async (request, reply) => {
     const parsed = authSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -112,6 +115,38 @@ export async function authRoutes(app: FastifyInstance, store: DataStore, mailer:
 
     failures.delete(parsed.data.email);
     return issueToken(reply, user);
+  });
+
+  app.post('/api/auth/forgot-password', { preHandler: authRateLimit }, async (request, reply) => {
+    const parsed = emailSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send(error('VALIDATION_ERROR', 'Enter a valid email'));
+    const user = await store.findUserByEmail(parsed.data.email);
+    if (user?.emailVerifiedAt) {
+      const code = createVerificationCode();
+      await store.setPasswordReset(
+        user.id,
+        digestCode(`reset:${user.email}`, code),
+        new Date(Date.now() + VERIFICATION_TTL_MS),
+      );
+      await mailer.sendPasswordResetCode(user.email, code);
+    }
+    return { ok: true };
+  });
+
+  app.post('/api/auth/reset-password', { preHandler: authRateLimit }, async (request, reply) => {
+    const parsed = resetPasswordSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send(error('VALIDATION_ERROR', 'Password reset details are invalid'));
+    }
+    const user = await store.findUserByEmail(parsed.data.email);
+    if (!user?.passwordResetHash || !user.passwordResetExpiry
+      || user.passwordResetExpiry.getTime() < Date.now()
+      || !matchesCode(`reset:${parsed.data.email}`, parsed.data.code, user.passwordResetHash)) {
+      return reply.code(400).send(error('INVALID_RESET_CODE', 'The password reset code is invalid or expired'));
+    }
+    await store.updatePassword(user.id, await hash(parsed.data.newPassword, 12));
+    failures.delete(user.email);
+    return { ok: true };
   });
 
   app.post(

@@ -42,6 +42,18 @@ export function validatePasswordChange(
   return { ok: true, value: { currentPassword, newPassword } };
 }
 
+export function validatePasswordReset(
+  value: unknown,
+): ValidationResult<{ email: string; code: string; newPassword: string }> {
+  const verification = validateVerification(value);
+  if (!verification.ok || !isObject(value)) return invalid('Password reset is invalid');
+  const newPassword = typeof value.newPassword === 'string' ? value.newPassword : '';
+  const candidate = validateAuth({ email: verification.value.email, password: newPassword });
+  return candidate.ok
+    ? { ok: true, value: { ...verification.value, newPassword } }
+    : invalid('Password reset is invalid');
+}
+
 export function validateUpload(value: unknown): ValidationResult<{ payload: Record<string, unknown> }> {
   if (!isObject(value) || !isObject(value.payload)) return invalid('payload must be an object');
   const payload = value.payload;

@@ -5,6 +5,8 @@ export type StoredUser = {
   emailVerifiedAt: Date | null;
   verificationHash: string | null;
   verificationExpiry: Date | null;
+  passwordResetHash: string | null;
+  passwordResetExpiry: Date | null;
   tokenVersion: number;
 };
 
@@ -20,6 +22,7 @@ export interface DataStore {
   setEmailVerification(userId: string, verificationHash: string, verificationExpiry: Date): Promise<void>;
   markEmailVerified(userId: string): Promise<void>;
   updatePassword(userId: string, passwordHash: string): Promise<number>;
+  setPasswordReset(userId: string, resetHash: string, resetExpiry: Date): Promise<void>;
   getData(userId: string): Promise<StoredData | null>;
   saveData(userId: string, payload: unknown): Promise<StoredData>;
   close(): Promise<void>;
@@ -46,6 +49,8 @@ export class MemoryStore implements DataStore {
       emailVerifiedAt: null,
       verificationHash,
       verificationExpiry,
+      passwordResetHash: null,
+      passwordResetExpiry: null,
       tokenVersion: 0,
     };
     this.users.set(email, user);
@@ -72,7 +77,16 @@ export class MemoryStore implements DataStore {
     if (!user) throw new Error('USER_NOT_FOUND');
     user.passwordHash = passwordHash;
     user.tokenVersion += 1;
+    user.passwordResetHash = null;
+    user.passwordResetExpiry = null;
     return user.tokenVersion;
+  }
+
+  async setPasswordReset(userId: string, resetHash: string, resetExpiry: Date) {
+    const user = Array.from(this.users.values()).find((candidate) => candidate.id === userId);
+    if (!user) throw new Error('USER_NOT_FOUND');
+    user.passwordResetHash = resetHash;
+    user.passwordResetExpiry = resetExpiry;
   }
 
   async getData(userId: string) {

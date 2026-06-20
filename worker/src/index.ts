@@ -5,6 +5,7 @@ import {
   validateAuth,
   validateEmail,
   validatePasswordChange,
+  validatePasswordReset,
   validateUpload,
   validateVerification,
 } from './validation';
@@ -38,6 +39,12 @@ export default {
       }
       if (url.pathname === '/api/auth/change-password' && request.method === 'POST') {
         return await changePassword(request, env);
+      }
+      if (url.pathname === '/api/auth/forgot-password' && request.method === 'POST') {
+        return await forgotPassword(request, env);
+      }
+      if (url.pathname === '/api/auth/reset-password' && request.method === 'POST') {
+        return await resetPassword(request, env);
       }
       if (url.pathname === '/api/data' && request.method === 'GET') return await getData(request, env);
       if (url.pathname === '/api/data' && request.method === 'PUT') return await putData(request, env);
@@ -228,6 +235,59 @@ async function changePassword(request: Request, env: Env) {
   return issueToken(env, { ...auth, tokenVersion });
 }
 
+async function forgotPassword(request: Request, env: Env) {
+  const limited = applyAuthRateLimit(request);
+  if (limited) return limited;
+  const parsed = validateEmail(await readJson(request, 16_384));
+  if (!parsed.ok) return apiError(400, 'VALIDATION_ERROR', 'Enter a valid email');
+  const user = await env.DB.prepare(
+    'SELECT id, email_verified_at FROM users WHERE email = ?1 LIMIT 1',
+  ).bind(parsed.value.email).first<{ id: string; email_verified_at: number | null }>();
+  if (user?.email_verified_at) {
+    const code = createVerificationCode();
+    const now = Date.now();
+    await env.DB.prepare(`
+      UPDATE users SET password_reset_hash = ?1, password_reset_expiry = ?2, updated_at = ?3
+      WHERE id = ?4
+    `).bind(
+      await digestCode(`reset:${parsed.value.email}`, code, env.JWT_SECRET),
+      now + VERIFICATION_TTL_MS,
+      now,
+      user.id,
+    ).run();
+    await sendCode(env, parsed.value.email, code, 'Reset your Permanent Portfolio Planner password', 'password reset');
+  }
+  return json({ ok: true });
+}
+
+async function resetPassword(request: Request, env: Env) {
+  const limited = applyAuthRateLimit(request);
+  if (limited) return limited;
+  const parsed = validatePasswordReset(await readJson(request, 16_384));
+  if (!parsed.ok) return apiError(400, 'VALIDATION_ERROR', 'Password reset details are invalid');
+  const user = await env.DB.prepare(`
+    SELECT id, password_reset_hash, password_reset_expiry
+    FROM users WHERE email = ?1 LIMIT 1
+  `).bind(parsed.value.email).first<{
+    id: string;
+    password_reset_hash: string | null;
+    password_reset_expiry: number | null;
+  }>();
+  const actual = await digestCode(`reset:${parsed.value.email}`, parsed.value.code, env.JWT_SECRET);
+  if (!user?.password_reset_hash || !user.password_reset_expiry
+    || user.password_reset_expiry < Date.now()
+    || !timingSafeStringEqual(actual, user.password_reset_hash)) {
+    return apiError(400, 'INVALID_RESET_CODE', 'The password reset code is invalid or expired');
+  }
+  await env.DB.prepare(`
+    UPDATE users SET password_hash = ?1, token_version = token_version + 1,
+      password_reset_hash = NULL, password_reset_expiry = NULL,
+      failed_login_count = 0, locked_until = NULL, updated_at = ?2
+    WHERE id = ?3
+  `).bind(await hashPassword(parsed.value.newPassword), Date.now(), user.id).run();
+  return json({ ok: true });
+}
+
 async function getData(request: Request, env: Env) {
   const user = await authenticate(request, env);
   if (user instanceof Response) return user;
@@ -299,6 +359,10 @@ async function digestCode(email: string, code: string, secret: string) {
 }
 
 async function sendVerificationCode(env: Env, email: string, code: string) {
+  return sendCode(env, email, code, 'Verify your Permanent Portfolio Planner account', 'verification');
+}
+
+async function sendCode(env: Env, email: string, code: string, subject: string, purpose: string) {
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
     throw new HttpError(503, 'EMAIL_NOT_CONFIGURED', 'Email verification is not configured');
   }
@@ -311,9 +375,9 @@ async function sendVerificationCode(env: Env, email: string, code: string) {
     body: JSON.stringify({
       from: env.EMAIL_FROM,
       to: [email],
-      subject: 'Verify your Permanent Portfolio Planner account',
-      text: `Your verification code is ${code}. It expires in 10 minutes.`,
-      html: `<p>Your verification code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p><p>It expires in 10 minutes.</p>`,
+      subject,
+      text: `Your ${purpose} code is ${code}. It expires in 10 minutes.`,
+      html: `<p>Your ${purpose} code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p><p>It expires in 10 minutes.</p>`,
     }),
   });
   if (!response.ok) {

@@ -21,6 +21,10 @@ export const changePasswordSchema = z.object({
   newPassword: authSchema.shape.password,
 });
 
+export const resetPasswordSchema = verifyEmailSchema.extend({
+  newPassword: authSchema.shape.password,
+});
+
 const assetSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(200),

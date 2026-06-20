@@ -3,6 +3,7 @@ import {
   validateAuth,
   validateEmail,
   validatePasswordChange,
+  validatePasswordReset,
   validateUpload,
   validateVerification,
 } from '../src/validation';
@@ -28,6 +29,11 @@ describe('Worker validation', () => {
     expect(validateVerification({ email: 'user@example.com', code: '12345' }).ok).toBe(false);
     expect(validatePasswordChange({
       currentPassword: 'ValidPass123',
+      newPassword: 'NewValidPass456',
+    }).ok).toBe(true);
+    expect(validatePasswordReset({
+      email: 'user@example.com',
+      code: '123456',
       newPassword: 'NewValidPass456',
     }).ok).toBe(true);
   });
