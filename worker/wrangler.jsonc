@@ -22,6 +22,9 @@
     "JWT_EXPIRES_SECONDS": "604800"
   },
   "observability": {
-    "enabled": false
+    "logs": {
+      "enabled": false,
+      "invocation_logs": true
+    }
   }
 }

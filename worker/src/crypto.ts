@@ -1,7 +1,7 @@
 ﻿import { AuthUser } from './types';
 
 const encoder = new TextEncoder();
-const PASSWORD_ITERATIONS = 120_000;
+const PASSWORD_ITERATIONS = 100_000;
 
 export async function hashPassword(password: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -13,9 +13,13 @@ export async function verifyPassword(password: string, encoded: string) {
   const [algorithm, iterationText, saltText, hashText] = encoded.split('$');
   if (algorithm !== 'pbkdf2-sha256' || !iterationText || !saltText || !hashText) return false;
   const iterations = Number(iterationText);
-  if (!Number.isInteger(iterations) || iterations < 100_000 || iterations > 1_000_000) return false;
-  const actual = await derivePassword(password, fromBase64Url(saltText), iterations);
-  return timingSafeEqual(actual, fromBase64Url(hashText));
+  if (!Number.isInteger(iterations) || iterations !== PASSWORD_ITERATIONS) return false;
+  try {
+    const actual = await derivePassword(password, fromBase64Url(saltText), iterations);
+    return timingSafeEqual(actual, fromBase64Url(hashText));
+  } catch {
+    return false;
+  }
 }
 
 export async function signToken(user: AuthUser, secret: string, issuer: string, expiresSeconds: number) {
