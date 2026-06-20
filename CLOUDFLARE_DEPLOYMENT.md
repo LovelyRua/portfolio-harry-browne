@@ -38,18 +38,23 @@ Cloudflare Static Assets, keeping Worker and D1 usage low.
 ## GitHub Actions
 
 The workflow at `.github/workflows/cloudflare.yml` runs tests and builds for
-pull requests. Pushes to `main` additionally apply pending D1 migrations and
-deploy the Worker plus the built frontend assets.
+pull requests and pushes to `dev`. Pushes to `main` additionally apply pending
+D1 migrations and deploy the Worker plus the built frontend assets.
 
 Add these GitHub repository or `production` environment secrets:
 
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
 - `JWT_SECRET`
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
 
 Create a narrowly scoped Cloudflare API token with permission to edit Workers
 scripts and D1 for the target account. `JWT_SECRET` must contain at least 32
 random characters. The non-sensitive D1 database ID is stored directly in
 `worker/wrangler.jsonc`. CI passes `JWT_SECRET` through Wrangler's
 `--secrets-file` option, which uploads code and secrets atomically and also
-works for the first deployment.
+works for the first deployment. `EMAIL_FROM` must be a sender authorized by
+your Resend account, such as
+`Permanent Portfolio Planner <noreply@example.com>`. Deployment fails instead
+of silently breaking registration when either email setting is absent.

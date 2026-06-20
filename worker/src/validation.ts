@@ -13,6 +13,35 @@ export function validateAuth(value: unknown): ValidationResult<{ email: string; 
   return details.length ? { ok: false, details } : { ok: true, value: { email, password } };
 }
 
+export function validateEmail(value: unknown): ValidationResult<{ email: string }> {
+  if (!isObject(value)) return invalid('Body must be an object');
+  const email = typeof value.email === 'string' ? value.email.trim().toLowerCase() : '';
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email) && email.length <= 254
+    ? { ok: true, value: { email } }
+    : invalid('Email is invalid');
+}
+
+export function validateVerification(value: unknown): ValidationResult<{ email: string; code: string }> {
+  const email = validateEmail(value);
+  if (!email.ok || !isObject(value) || typeof value.code !== 'string' || !/^\d{6}$/u.test(value.code)) {
+    return invalid('Email or verification code is invalid');
+  }
+  return { ok: true, value: { email: email.value.email, code: value.code } };
+}
+
+export function validatePasswordChange(
+  value: unknown,
+): ValidationResult<{ currentPassword: string; newPassword: string }> {
+  if (!isObject(value)) return invalid('Body must be an object');
+  const currentPassword = typeof value.currentPassword === 'string' ? value.currentPassword : '';
+  const newPassword = typeof value.newPassword === 'string' ? value.newPassword : '';
+  const candidate = validateAuth({ email: 'validation@example.test', password: newPassword });
+  if (!currentPassword || currentPassword.length > 128 || !candidate.ok) {
+    return invalid('Password change is invalid');
+  }
+  return { ok: true, value: { currentPassword, newPassword } };
+}
+
 export function validateUpload(value: unknown): ValidationResult<{ payload: Record<string, unknown> }> {
   if (!isObject(value) || !isObject(value.payload)) return invalid('payload must be an object');
   const payload = value.payload;

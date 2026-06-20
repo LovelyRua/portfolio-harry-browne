@@ -8,6 +8,19 @@ export const authSchema = z.object({
     .regex(/[0-9]/, 'Password requires a number'),
 });
 
+export const emailSchema = z.object({
+  email: z.email().transform((value) => value.toLowerCase()),
+});
+
+export const verifyEmailSchema = emailSchema.extend({
+  code: z.string().regex(/^\d{6}$/),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: authSchema.shape.password,
+});
+
 const assetSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(200),

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildServer } from '../app';
 import { MemoryStore } from '../lib/store';
+import { Mailer } from '../lib/mailer';
 
 const validPortfolio = {
   version: 1,
@@ -13,9 +14,11 @@ const validPortfolio = {
 
 describe('API', () => {
   let app: FastifyInstance;
+  let mailer: TestMailer;
 
   beforeEach(() => {
-    app = buildServer({ store: new MemoryStore(), logger: false });
+    mailer = new TestMailer();
+    app = buildServer({ store: new MemoryStore(), mailer, logger: false });
   });
 
   afterEach(async () => {
@@ -44,16 +47,83 @@ describe('API', () => {
     expect(response.json().error.code).toBe('VALIDATION_ERROR');
   });
 
-  test('registers and logs in', async () => {
+  test('requires email verification before login', async () => {
     const auth = { email: 'user@example.test', password: 'ValidPass123' };
     expect((await app.inject({ method: 'POST', url: '/api/auth/register', payload: auth })).statusCode).toBe(201);
+    const blocked = await app.inject({ method: 'POST', url: '/api/auth/login', payload: auth });
+    expect(blocked.statusCode).toBe(403);
+    expect(blocked.json().error.code).toBe('EMAIL_NOT_VERIFIED');
+
+    const verify = await app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { email: auth.email, code: mailer.codeFor(auth.email) },
+    });
+    expect(verify.statusCode).toBe(200);
     const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: auth });
     expect(login.statusCode).toBe(200);
     expect(login.json().accessToken).toBeTypeOf('string');
   });
 
+  test('does not let repeat registration replace an unverified account password', async () => {
+    const email = 'pending@example.test';
+    await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { email, password: 'OriginalPass123' },
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { email, password: 'AttackerPass456' },
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { email, code: mailer.codeFor(email) },
+    });
+
+    expect((await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password: 'OriginalPass123' },
+    })).statusCode).toBe(200);
+    expect((await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password: 'AttackerPass456' },
+    })).statusCode).toBe(401);
+  });
+
+  test('changes password and invalidates the previous token', async () => {
+    const email = 'change@example.test';
+    const oldPassword = 'ValidPass123';
+    const oldToken = await tokenFor(app, mailer, email, oldPassword);
+    const changed = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: { authorization: `Bearer ${oldToken}` },
+      payload: { currentPassword: oldPassword, newPassword: 'NewValidPass456' },
+    });
+    expect(changed.statusCode).toBe(200);
+    expect(changed.json().accessToken).toBeTypeOf('string');
+
+    const oldSession = await app.inject({
+      method: 'GET',
+      url: '/api/data',
+      headers: { authorization: `Bearer ${oldToken}` },
+    });
+    expect(oldSession.statusCode).toBe(401);
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password: 'NewValidPass456' },
+    });
+    expect(login.statusCode).toBe(200);
+  });
+
   test('uploads and downloads portfolio data', async () => {
-    const token = await tokenFor(app);
+    const token = await tokenFor(app, mailer);
     const uploaded = await app.inject({
       method: 'PUT',
       url: '/api/data',
@@ -70,7 +140,7 @@ describe('API', () => {
   });
 
   test('stores encrypted cloud envelopes without inspecting plaintext', async () => {
-    const token = await tokenFor(app);
+    const token = await tokenFor(app, mailer);
     const encrypted = {
       format: 'pp-e2ee-v1',
       cipher: { algorithm: 'AES-256-GCM', iv: 'aXY=', ciphertext: 'Y2lwaGVydGV4dA==' },
@@ -103,7 +173,7 @@ describe('API', () => {
   });
 
   test('rejects invalid portfolio data', async () => {
-    const token = await tokenFor(app);
+    const token = await tokenFor(app, mailer);
     const response = await app.inject({
       method: 'PUT',
       url: '/api/data',
@@ -126,9 +196,33 @@ describe('API', () => {
   });
 });
 
-async function tokenFor(app: FastifyInstance) {
-  const auth = { email: `${crypto.randomUUID()}@example.test`, password: 'ValidPass123' };
+async function tokenFor(
+  app: FastifyInstance,
+  mailer: TestMailer,
+  email = `${crypto.randomUUID()}@example.test`,
+  password = 'ValidPass123',
+) {
+  const auth = { email, password };
   await app.inject({ method: 'POST', url: '/api/auth/register', payload: auth });
+  await app.inject({
+    method: 'POST',
+    url: '/api/auth/verify-email',
+    payload: { email: auth.email, code: mailer.codeFor(auth.email) },
+  });
   const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: auth });
   return login.json().accessToken as string;
+}
+
+class TestMailer implements Mailer {
+  private codes = new Map<string, string>();
+
+  async sendVerificationCode(email: string, code: string) {
+    this.codes.set(email, code);
+  }
+
+  codeFor(email: string) {
+    const code = this.codes.get(email);
+    if (!code) throw new Error(`No verification code for ${email}`);
+    return code;
+  }
 }
