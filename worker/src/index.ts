@@ -28,17 +28,19 @@ export default {
         return apiError(500, 'CONFIG_ERROR', 'Worker secret is not configured');
       }
 
-      if (url.pathname === '/api/auth/register' && request.method === 'POST') return register(request, env);
-      if (url.pathname === '/api/auth/login' && request.method === 'POST') return login(request, env);
-      if (url.pathname === '/api/auth/verify-email' && request.method === 'POST') return verifyEmail(request, env);
+      if (url.pathname === '/api/auth/register' && request.method === 'POST') return await register(request, env);
+      if (url.pathname === '/api/auth/login' && request.method === 'POST') return await login(request, env);
+      if (url.pathname === '/api/auth/verify-email' && request.method === 'POST') {
+        return await verifyEmail(request, env);
+      }
       if (url.pathname === '/api/auth/resend-verification' && request.method === 'POST') {
-        return resendVerification(request, env);
+        return await resendVerification(request, env);
       }
       if (url.pathname === '/api/auth/change-password' && request.method === 'POST') {
-        return changePassword(request, env);
+        return await changePassword(request, env);
       }
-      if (url.pathname === '/api/data' && request.method === 'GET') return getData(request, env);
-      if (url.pathname === '/api/data' && request.method === 'PUT') return putData(request, env);
+      if (url.pathname === '/api/data' && request.method === 'GET') return await getData(request, env);
+      if (url.pathname === '/api/data' && request.method === 'PUT') return await putData(request, env);
       return apiError(404, 'NOT_FOUND', 'Route not found');
     } catch (error) {
       if (error instanceof HttpError) return apiError(error.status, error.code, error.message, error.details);
@@ -315,7 +317,8 @@ async function sendVerificationCode(env: Env, email: string, code: string) {
     }),
   });
   if (!response.ok) {
-    console.error('Verification email delivery failed', response.status);
+    const responseText = (await response.text()).slice(0, 1_000);
+    console.error('Verification email delivery failed', response.status, responseText);
     throw new HttpError(502, 'EMAIL_SEND_FAILED', 'Verification email could not be sent');
   }
 }
