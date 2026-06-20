@@ -6,6 +6,7 @@ import { DataStore, MemoryStore } from './lib/store';
 import { PrismaStore } from './lib/prismaStore';
 import { authRoutes } from './routes/auth';
 import { dataRoutes } from './routes/data';
+import { AppMailer, Mailer } from './lib/mailer';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -13,7 +14,7 @@ declare module 'fastify' {
   }
 }
 
-export function buildServer(options: { store?: DataStore; logger?: boolean } = {}) {
+export function buildServer(options: { store?: DataStore; mailer?: Mailer; logger?: boolean } = {}) {
   const app = Fastify({
     logger: options.logger ?? {
       level: config.logLevel,
@@ -22,6 +23,7 @@ export function buildServer(options: { store?: DataStore; logger?: boolean } = {
     bodyLimit: 1_048_576,
   });
   const store = options.store ?? (config.dataBackend === 'memory' ? new MemoryStore() : new PrismaStore());
+  const mailer = options.mailer ?? new AppMailer();
 
   app.register(cors, {
     origin: config.corsOrigins.length ? config.corsOrigins : process.env.NODE_ENV !== 'production',
@@ -35,10 +37,14 @@ export function buildServer(options: { store?: DataStore; logger?: boolean } = {
 
   app.decorate('authenticate', async function authenticate(request) {
     await request.jwtVerify();
+    const user = await store.findUserById(request.user.userId);
+    if (!user || user.tokenVersion !== request.user.tokenVersion) {
+      throw Object.assign(new Error('Session is no longer valid'), { statusCode: 401 });
+    }
   });
 
   app.get('/health', async () => ({ ok: true, service: 'portfolio-harry-browne-backend' }));
-  app.register((instance) => authRoutes(instance, store));
+  app.register((instance) => authRoutes(instance, store, mailer));
   app.register((instance) => dataRoutes(instance, store));
 
   app.setErrorHandler((cause: FastifyError, _request, reply) => {

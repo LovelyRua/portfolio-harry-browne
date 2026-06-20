@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import './i18n';
 import {
   AlertTriangle,
   Archive,
@@ -31,8 +32,10 @@ import {
   X,
 } from 'lucide-react';
 import { LoginPanel } from './auth/LoginPanel';
+import { ChangePasswordPanel } from './auth/ChangePasswordPanel';
 import { useAuth } from './auth/AuthContext';
-import { ApiError } from './api/client';
+import { ApiError, createApiClient } from './api/client';
+import { useTranslation } from 'react-i18next';
 import {
   decryptCloudPayload,
   encryptCloudPayload,
@@ -201,6 +204,7 @@ function describePortfolioDiff(local: AppData, cloud: Partial<AppData>) {
 }
 
 export default function App() {
+  const { t, i18n } = useTranslation();
   const { token, accountEmail, cloudPassphrase, api, setToken } = useAuth();
   const cloudLoadRef = useRef(false);
   const uploadTimerRef = useRef<number | null>(null);
@@ -219,6 +223,7 @@ export default function App() {
   const [cashflowMode, setCashflowMode] = useState<'deposit' | 'withdraw'>('deposit');
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [showLogin, setShowLogin] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [ratesBusy, setRatesBusy] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => (localStorage.getItem('auth_token') ? 'loading' : 'local'));
@@ -232,8 +237,8 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', data.darkMode);
     document.documentElement.classList.toggle('wabi-sabi', data.visualTheme === 'wabi');
-    document.title = 'Permanent Portfolio Planner';
-  }, [data.darkMode, data.visualTheme]);
+    document.title = t('app_title');
+  }, [data.darkMode, data.visualTheme, i18n.language, t]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -783,10 +788,29 @@ export default function App() {
     }
   }
 
+  async function changePassword(currentPassword: string, newPassword: string) {
+    if (!token || !accountEmail) throw new Error(t('sign_in'));
+    const response = await api.auth.changePassword({ currentPassword, newPassword });
+    setToken(response.accessToken, accountEmail, newPassword);
+    try {
+      const encrypted = await encryptCloudPayload(
+        data,
+        newPassword,
+        CLOUD_RECOVERY_PUBLIC_KEY,
+        CLOUD_RECOVERY_KEY_ID,
+      );
+      const nextApi = createApiClient(() => response.accessToken);
+      await nextApi.data.upload(encrypted);
+      showNotice(t('password_changed'));
+    } catch {
+      showNotice(t('password_changed_sync_pending'));
+    }
+  }
+
   const viewButtons = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'assets', label: 'Assets', icon: PiggyBank },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: t('overview'), icon: LayoutDashboard },
+    { id: 'assets', label: t('assets'), icon: PiggyBank },
+    { id: 'settings', label: t('settings'), icon: Settings },
   ] as const;
 
   const syncCopy = getSyncCopy(syncStatus, lastSyncedAt);
@@ -796,10 +820,10 @@ export default function App() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <header className="app-shell">
           <div>
-            <p className="eyebrow">Harry Browne strategy workspace</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal sm:text-4xl">Permanent Portfolio Planner</h1>
+            <p className="eyebrow">{t('app_eyebrow')}</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-normal sm:text-4xl">{t('app_title')}</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-              A quiet command center for balancing stocks, bonds, gold and cash across currencies.
+              {t('app_subtitle')}
             </p>
           </div>
           <div className="hero-command">
@@ -840,14 +864,14 @@ export default function App() {
               </button>
               {token ? (
                 <div className="account-chip">
-                  <span>{accountEmail ?? 'Cloud account'}</span>
+                  <span>{accountEmail ?? t('cloud_account')}</span>
                   <button className="btn-secondary" onClick={() => setToken(null)} type="button">
-                    <LogOut className="h-4 w-4" /> Sign out
+                    <LogOut className="h-4 w-4" /> {t('sign_out')}
                   </button>
                 </div>
               ) : (
                 <button className="btn-secondary" onClick={() => setShowLogin(true)} type="button">
-                  <LogIn className="h-4 w-4" /> Sync
+                  <LogIn className="h-4 w-4" /> {t('sync')}
                 </button>
               )}
             </div>
@@ -1173,9 +1197,26 @@ export default function App() {
             </Panel>
 
             <Panel title="Currencies and data" icon={<Settings />}>
+              <div className="mb-5 grid gap-4 sm:grid-cols-2">
+                <Field label={t('language')}>
+                  <select className="input" value={i18n.language.split('-')[0]} onChange={(event) => void i18n.changeLanguage(event.target.value)}>
+                    <option value="en">English</option>
+                    <option value="zh">简体中文</option>
+                    <option value="ja">日本語</option>
+                  </select>
+                </Field>
+                {token && (
+                  <div className="field">
+                    <span>{t('account_security')}</span>
+                    <button className="btn-secondary w-full" type="button" onClick={() => setShowChangePassword(true)}>
+                      <Lock className="h-4 w-4" /> {t('change_password')}
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className={cn('sync-panel', syncConflict && 'has-conflict')}>
                 <div>
-                  <strong>{token ? accountEmail ?? 'Cloud account' : 'Local only'}</strong>
+                  <strong>{token ? accountEmail ?? t('cloud_account') : 'Local only'}</strong>
                   <span>{syncConflict ?? syncCopy.footer}</span>
                 </div>
                 <span>{lastCloudUpdatedAt ? `Server updated ${formatSyncTimestamp(lastCloudUpdatedAt)}` : token ? 'No server timestamp yet' : 'Not signed in'}</span>
@@ -1266,6 +1307,11 @@ export default function App() {
         }}
         api={api}
         theme={data.visualTheme === 'wabi' ? 'wabi-sabi' : 'modern'}
+      />
+      <ChangePasswordPanel
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onChangePassword={changePassword}
       />
     </main>
   );

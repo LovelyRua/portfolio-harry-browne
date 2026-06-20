@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { validateAuth, validateUpload } from '../src/validation';
+import {
+  validateAuth,
+  validateEmail,
+  validatePasswordChange,
+  validateUpload,
+  validateVerification,
+} from '../src/validation';
 
 describe('Worker validation', () => {
   test('normalizes valid credentials', () => {
@@ -11,6 +17,19 @@ describe('Worker validation', () => {
 
   test('rejects weak credentials', () => {
     expect(validateAuth({ email: 'bad', password: 'short' }).ok).toBe(false);
+  });
+
+  test('validates email verification and password changes', () => {
+    expect(validateEmail({ email: ' USER@example.com ' })).toEqual({
+      ok: true,
+      value: { email: 'user@example.com' },
+    });
+    expect(validateVerification({ email: 'user@example.com', code: '123456' }).ok).toBe(true);
+    expect(validateVerification({ email: 'user@example.com', code: '12345' }).ok).toBe(false);
+    expect(validatePasswordChange({
+      currentPassword: 'ValidPass123',
+      newPassword: 'NewValidPass456',
+    }).ok).toBe(true);
   });
 
   test('accepts a valid portfolio payload', () => {

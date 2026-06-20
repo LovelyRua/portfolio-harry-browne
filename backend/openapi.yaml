@@ -27,6 +27,45 @@ paths:
           description: Validation error
         "409":
           description: Email already exists
+  /api/auth/verify-email:
+    post:
+      summary: Verify a newly registered email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  pattern: '^\d{6}$'
+      responses:
+        "200":
+          description: Email verified
+        "400":
+          description: Invalid or expired verification code
+  /api/auth/resend-verification:
+    post:
+      summary: Send a new email verification code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Request accepted
   /api/auth/login:
     post:
       summary: Sign in
@@ -41,6 +80,31 @@ paths:
           description: Access token
         "401":
           description: Invalid credentials
+        "403":
+          description: Email has not been verified
+  /api/auth/change-password:
+    post:
+      summary: Change the signed-in user's password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 10
+      responses:
+        "200":
+          description: Password changed and a replacement access token issued
+        "401":
+          description: Current password is incorrect
   /api/data:
     get:
       summary: Read the current user's portfolio backup

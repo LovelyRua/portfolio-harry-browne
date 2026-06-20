@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { hashPassword, verifyPassword } from '../src/crypto';
+import { hashPassword, signToken, verifyPassword, verifyToken } from '../src/crypto';
 
 describe('Worker password hashing', () => {
   test('uses the Cloudflare-supported PBKDF2 iteration limit', async () => {
@@ -14,5 +14,21 @@ describe('Worker password hashing', () => {
     const legacy = 'pbkdf2-sha256$120000$c2FsdA$aGFzaA';
 
     await expect(verifyPassword('ValidPass123', legacy)).resolves.toBe(false);
+  });
+
+  test('round-trips token versions used to invalidate old sessions', async () => {
+    const secret = 'a-secure-test-secret-that-is-long-enough';
+    const token = await signToken(
+      { userId: 'user-1', email: 'user@example.test', tokenVersion: 3 },
+      secret,
+      'test-issuer',
+      60,
+    );
+
+    await expect(verifyToken(token, secret, 'test-issuer')).resolves.toEqual({
+      userId: 'user-1',
+      email: 'user@example.test',
+      tokenVersion: 3,
+    });
   });
 });

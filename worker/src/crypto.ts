@@ -28,6 +28,7 @@ export async function signToken(user: AuthUser, secret: string, issuer: string, 
   const payload = base64Url(encoder.encode(JSON.stringify({
     sub: user.userId,
     email: user.email,
+    tokenVersion: user.tokenVersion,
     iss: issuer,
     iat: now,
     exp: now + expiresSeconds,
@@ -47,12 +48,17 @@ export async function verifyToken(token: string, secret: string, issuer: string)
     const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(payloadText))) as {
       sub?: string;
       email?: string;
+      tokenVersion?: number;
       iss?: string;
       exp?: number;
     };
     if (header.alg !== 'HS256' || payload.iss !== issuer || !payload.sub || !payload.email) return null;
     if (!payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) return null;
-    return { userId: payload.sub, email: payload.email };
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      tokenVersion: Number.isInteger(payload.tokenVersion) ? payload.tokenVersion! : 0,
+    };
   } catch {
     return null;
   }

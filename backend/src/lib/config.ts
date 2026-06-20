@@ -11,6 +11,8 @@ export const config = {
   logLevel: process.env.LOG_LEVEL ?? 'info',
   corsOrigins: csv(process.env.CORS_ORIGINS),
   dataBackend: process.env.DATA_BACKEND ?? 'prisma',
+  resendApiKey: process.env.RESEND_API_KEY ?? '',
+  emailFrom: process.env.EMAIL_FROM ?? '',
 };
 
 export function assertProductionConfig() {
@@ -19,5 +21,8 @@ export function assertProductionConfig() {
   }
   if (process.env.NODE_ENV === 'production' && config.dataBackend !== 'prisma') {
     throw new Error('Production must use DATA_BACKEND=prisma');
+  }
+  if (process.env.NODE_ENV === 'production' && (!config.resendApiKey || !config.emailFrom)) {
+    throw new Error('RESEND_API_KEY and EMAIL_FROM must be configured in production');
   }
 }

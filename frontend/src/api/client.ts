@@ -54,10 +54,22 @@ export function createApiClient(getToken: TokenGetter) {
     token: () => getToken(),
     auth: {
       async register(params: { email: string; password: string }) {
-        return request<{ ok: true }>('/auth/register', { method: 'POST', body: JSON.stringify(params) });
+        return request<{ ok: true; verificationRequired: true }>('/auth/register', { method: 'POST', body: JSON.stringify(params) });
+      },
+      async verifyEmail(params: { email: string; code: string }) {
+        return request<{ ok: true }>('/auth/verify-email', { method: 'POST', body: JSON.stringify(params) });
+      },
+      async resendVerification(params: { email: string }) {
+        return request<{ ok: true }>('/auth/resend-verification', { method: 'POST', body: JSON.stringify(params) });
       },
       async login(params: { email: string; password: string }) {
         return request<{ accessToken: string; tokenType: string }>('/auth/login', { method: 'POST', body: JSON.stringify(params) });
+      },
+      async changePassword(params: { currentPassword: string; newPassword: string }) {
+        return request<{ accessToken: string; tokenType: string }>('/auth/change-password', {
+          method: 'POST',
+          body: JSON.stringify(params),
+        });
       },
     },
     data: {
