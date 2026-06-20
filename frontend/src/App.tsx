@@ -1260,8 +1260,8 @@ export default function App() {
         onClose={() => setShowLogin(false)}
         mode={authMode}
         onModeChange={setAuthMode}
-        onSuccessToken={(nextToken, email, encryptionPassphrase) => {
-          setToken(nextToken, email, encryptionPassphrase);
+        onSuccessToken={(nextToken, email, password) => {
+          setToken(nextToken, email, password);
           setShowLogin(false);
         }}
         api={api}

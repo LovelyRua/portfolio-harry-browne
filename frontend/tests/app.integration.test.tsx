@@ -30,6 +30,7 @@ function renderApp() {
 describe('portfolio app integration', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   test('signs in, loads cloud state, and exposes the synced status', async () => {
@@ -56,17 +57,12 @@ describe('portfolio app integration', () => {
 
     await user.type(within(signInDialog).getByLabelText('Email'), 'qa@example.test');
     await user.type(within(signInDialog).getByLabelText('Password'), 'ValidPass123');
-    const encryptionInput = within(signInDialog)
-      .getByText('Cloud encryption passphrase')
-      .closest('label')
-      ?.querySelector('input');
-    expect(encryptionInput).not.toBeNull();
-    await user.type(encryptionInput!, 'PrivateCloudPass123');
     await user.click(within(signInDialog).getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => expect(screen.getByText('qa@example.test')).toBeVisible());
     await waitFor(() => expect(screen.getByText('Synced')).toBeVisible());
     expect(localStorage.getItem('auth_token')).toBe('test-token');
+    expect(sessionStorage.getItem('cloud_encryption_credential')).toBe('ValidPass123');
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringMatching(/\/auth\/login$/),
       expect.objectContaining({ method: 'POST' }),

@@ -7,14 +7,16 @@ envelope before any portfolio data is sent to the API.
 
 - Each upload generates a random AES-256-GCM data key.
 - Portfolio JSON is encrypted with that data key in the browser.
-- The data key is wrapped with a key derived from the user's separate cloud
-  encryption passphrase using PBKDF2-SHA256.
+- The data key is wrapped with a key derived from the user's login password
+  using PBKDF2-SHA256.
 - The same data key is also wrapped with the project's RSA-OAEP recovery public
   key.
 - The Worker, Fastify backend and D1/PostgreSQL only receive the encrypted
   envelope.
-- Account passwords and encryption passphrases serve different purposes. The
-  encryption passphrase is never sent to the API.
+- The login password serves both authentication and local cloud-backup
+  decryption. It is sent to the authentication API over HTTPS during login, but
+  is not stored in plaintext. The browser also derives the encryption key
+  locally from the same password.
 - Legacy plaintext cloud backups can still be loaded. Their next successful
   sync migrates them to the encrypted format.
 
@@ -33,7 +35,7 @@ The generated private key is intentionally ignored by Git:
 
 Copy that private key to an encrypted offline location. Never put it in GitHub
 Secrets, Cloudflare, the frontend bundle, ordinary backups or chat. Losing both
-the user's passphrase and this private key makes encrypted cloud data
+the user's password and this private key makes encrypted cloud data
 unrecoverable.
 
 To decrypt an exported D1 `payload` value:
@@ -56,7 +58,9 @@ as backups encrypted for its matching `keyId` may still exist.
 - Browser local storage is only as safe as the device and browser profile.
 - An XSS vulnerability running in the application origin could access decrypted
   data while the app is open.
-- The encryption passphrase is held in memory for the signed-in page session.
-  Reloading requires signing in and entering it again.
+- The login password is kept in `sessionStorage` for the current browser tab so
+  refreshing does not interrupt encrypted sync. It is removed on sign-out and
+  normally cleared when the tab or browser session closes. It is never written
+  to persistent `localStorage`.
 - Metadata such as account email, timestamps and encrypted payload size remains
   visible to the service.
